@@ -1,44 +1,63 @@
-// Grab the articles as a json
-$.getJSON("/articles", function(data) {
-  // For each one
-  for (var i = 0; i < data.length; i++) {
-    // Display the apropos information on the page
-    $("#articles").append("<p data-id='" + data[i]._id + "'>" + data[i].title + "<br />" + data[i].link + "</p>");
-  }
-});
 
+$(document).ready(function() {
+    var count=0;
 
-// Whenever someone clicks a p tag
-$(document).on("click", "p", function() {
+  $("#scrape").on("click", function(e){
+    e.preventDefault();
+    console.log("button clicked");
+    $.ajax({
+      method: "GET",
+      url: "/scrape"
+    }).then(function(){
+      
+      window.location.href = "/";
+    })
+  });
+  $("#clean").on("click", function(e){
+    e.preventDefault();
+    console.log("button clicked");
+    $.ajax({
+      method: "GET",
+      url: "/clean"
+    }).then(function(){
+      window.location.href = "/";
+    })
+  });
+
+  // Whenever someone clicks a p tag
+$(document).on("click", ".li-article", function(e) {
   // Empty the notes from the note section
-  $("#notes").empty();
-  // Save the id from the p tag
+  e.preventDefault();
+ // $("#exampleModal").modal();
+  console.log("count: "+count);
+  count++;
+  
+  // // Save the id from the p tag
   var thisId = $(this).attr("data-id");
 
-  // Now make an ajax call for the Article
+  // // Now make an ajax call for the Article
   $.ajax({
     method: "GET",
     url: "/articles/" + thisId
   })
     // With that done, add the note information to the page
     .then(function(data) {
-      console.log(data);
-      // The title of the article
-      $("#notes").append("<h2>" + data.title + "</h2>");
-      // An input to enter a new title
-      $("#notes").append("<input id='titleinput' name='title' >");
-      // A textarea to add a new note body
-      $("#notes").append("<textarea id='bodyinput' name='body'></textarea>");
+      $("#currNotes").html("");
       // A button to submit a new note, with the id of the article saved to it
-      $("#notes").append("<button data-id='" + data._id + "' id='savenote'>Save Note</button>");
+      $("#savenote").attr("data-id", data._id );
 
       // If there's a note in the article
       if (data.note) {
-        // Place the title of the note in the title input
-        $("#titleinput").val(data.note.title);
-        // Place the body of the note in the body textarea
-        $("#bodyinput").val(data.note.body);
+        
+        for(var i=0; i<data.note.length; i++) {
+          var li = $("<li>");
+          li.append("<p><b>"+data.note[i].title+"</b><i data-id="+data.note[i]._id+" class='ml-1 far fa-trash-alt'></i></p>");
+          li.append("<p>"+data.note[i].body+"</p>");
+          $("#currNotes").append(li);
+        }
       }
+      $("#exampleModal").modal();
+
     });
 });
 
@@ -46,6 +65,7 @@ $(document).on("click", "p", function() {
 $(document).on("click", "#savenote", function() {
   // Grab the id associated with the article from the submit button
   var thisId = $(this).attr("data-id");
+  console.log("this ID is "+thisId)
 
   // Run a POST request to change the note, using what's entered in the inputs
   $.ajax({
@@ -60,13 +80,32 @@ $(document).on("click", "#savenote", function() {
   })
     // With that done
     .then(function(data) {
-      // Log the response
-      console.log(data);
-      // Empty the notes section
-      $("#notes").empty();
+      
+      window.location.href = "/";
     });
 
-  // Also, remove the values entered in the input and textarea for note entry
-  $("#titleinput").val("");
-  $("#bodyinput").val("");
 });
+
+
+  $(document).on("click", ".far", function() {
+    // Grab the id associated with the article from the submit button
+    var thisId = $(this).attr("data-id");
+    console.log("this ID is "+thisId)
+
+    // Run a POST request to change the note, using what's entered in the inputs
+    $.ajax({
+      method: "GET",
+      url: "/note/" + thisId,
+      
+    })
+      // With that done
+      .then(function(data) {
+        console.log(data);
+        window.location.href = "/";
+      });
+
+  });
+
+
+});
+
